@@ -1,0 +1,5 @@
+{
+  "name": "Pro Indica App",
+  "description": "Conectando você aos melhores profissionais da sua região.",
+  "requestFramePermissions": ["geolocation"]
+}

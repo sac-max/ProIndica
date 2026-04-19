@@ -1,0 +1,206 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Fields: uid, name, email, phone, cpf, address, number, city, cep, state, photoURL, role, location, createdAt
+    //
+    // Collection: professionals
+    // Fields: uid, description, categories, experience, portfolio, city, averagePrice, rating, jobsCompleted, isPremium, skills
+    //
+    // Collection: jobs
+    // Fields: title, description, clientId, status, category, budget, createdAt
+    //
+    // Collection: reviews
+    // Fields: professionalId, clientId, clientName, clientPhoto, rating, comment, createdAt
+    //
+    // Collection: profile_interactions
+    // Fields: professionalId, clientId, clientName, clientPhoto, clientPhone, type, timestamp
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        ((request.auth.token.email == "sugui.indicae@gmail.com") ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function isPremiumUnchanged() {
+      return !('isPremium' in request.resource.data) || 
+             !('isPremium' in resource.data) || 
+             request.resource.data.isPremium == resource.data.isPremium;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'role']) &&
+             data.uid is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && data.email.size() < 100 &&
+             data.role in ['client', 'professional', 'admin'] &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 20)) &&
+             (!('cpf' in data) || (data.cpf is string && data.cpf.size() < 20)) &&
+             (!('address' in data) || (data.address is string && data.address.size() < 200)) &&
+             (!('number' in data) || (data.number is string && data.number.size() < 20)) &&
+             (!('city' in data) || (data.city is string && data.city.size() < 100)) &&
+             (!('cep' in data) || (data.cep is string && data.cep.size() < 10)) &&
+             (!('state' in data) || (data.state is string && data.state.size() < 50)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1048576)) &&
+             (!('platform' in data) || data.platform in ['web', 'ios', 'android']) &&
+             (!('isPremium' in data) || data.isPremium is bool);
+    }
+
+    function isValidProfessional(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'categories']) &&
+             data.uid is string && data.uid.size() < 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && data.email.size() < 100 &&
+             data.categories is list && data.categories.size() > 0 && data.categories.size() < 20 &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 20)) &&
+             (!('cpf' in data) || (data.cpf is string && data.cpf.size() < 20)) &&
+             (!('address' in data) || (data.address is string && data.address.size() < 200)) &&
+             (!('number' in data) || (data.number is string && data.number.size() < 20)) &&
+             (!('city' in data) || (data.city is string && data.city.size() < 100)) &&
+             (!('cep' in data) || (data.cep is string && data.cep.size() < 10)) &&
+             (!('state' in data) || (data.state is string && data.state.size() < 50)) &&
+             (!('profession' in data) || (data.profession is string && data.profession.size() > 0 && data.profession.size() < 100)) &&
+             (!('specialization' in data) || (data.specialization is string && data.specialization.size() < 100)) &&
+             (!('experience' in data) || (data.experience is string && data.experience.size() < 50)) &&
+             (!('description' in data) || (data.description is string && data.description.size() < 5000)) &&
+             (!('worksPerformed' in data) || (data.worksPerformed is string && data.worksPerformed.size() < 5000)) &&
+             (!('portfolio' in data) || (data.portfolio is list && data.portfolio.size() <= 10)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1048576)) &&
+             (!('coverURL' in data) || (data.coverURL is string && data.coverURL.size() < 1048576)) &&
+             (!('socialLinks' in data) || (data.socialLinks is map && data.socialLinks.keys().size() < 10)) &&
+             (!('isPremium' in data) || data.isPremium is bool) &&
+             (!('isVerified' in data) || data.isVerified is bool) &&
+             (!('isAudited' in data) || data.isAudited is bool) &&
+             (!('profileViews' in data) || data.profileViews is number) &&
+             (!('rating' in data) || data.rating is number) &&
+             (!('jobsCompleted' in data) || data.jobsCompleted is number) &&
+             (!('customPageUrl' in data) || (data.customPageUrl is string && data.customPageUrl.size() < 100));
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['professionalId', 'clientId', 'rating', 'verificationCode']) &&
+             data.professionalId is string &&
+             data.clientId is string &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.verificationCode is string;
+    }
+
+    function isPremiumProfessional(profId) {
+      return get(/databases/$(database)/documents/professionals/$(profId)).data.isPremium == true;
+    }
+
+    function isPhoneVerified() {
+      let user = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return user.data.phoneVerified == true;
+    }
+
+    function isValidReviewCode(code, profId) {
+      // We assume the document ID for review_codes is professionalId_code
+      let codeId = profId + "_" + code;
+      let codeDoc = get(/databases/$(database)/documents/review_codes/$(codeId));
+      return codeDoc.data.professionalId == profId && codeDoc.data.status == 'active';
+    }
+
+    function isValidInteraction(data) {
+      return data.keys().hasAll(['professionalId', 'type', 'timestamp']) &&
+             data.professionalId is string &&
+             data.type in ['view', 'contact'] &&
+             data.timestamp is timestamp;
+    }
+
+    // Rules
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if (isOwner(uid) || isAdmin()) || (request.resource.data.keys().hasOnly(['isPremium']));
+      allow update: if (isOwner(uid) || isAdmin()) || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isPremium']));
+      allow delete: if isAdmin();
+    }
+
+    match /professionals/{uid} {
+      allow read: if true;
+      allow create: if (isOwner(uid) || isAdmin()) || (request.resource.data.keys().hasOnly(['isPremium', 'premiumSince']));
+      allow update: if (isOwner(uid) || isAdmin()) || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isPremium', 'premiumSince']));
+      allow delete: if isAdmin();
+    }
+
+    match /jobs/{jobId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.clientId == request.auth.uid;
+      allow update: if (isAuthenticated() && resource.data.clientId == request.auth.uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && 
+                      isValidReview(request.resource.data) && 
+                      request.resource.data.clientId == request.auth.uid &&
+                      isPhoneVerified() &&
+                      isPremiumProfessional(request.resource.data.professionalId) &&
+                      isValidReviewCode(request.resource.data.verificationCode, request.resource.data.professionalId);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /review_codes/{codeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+                      request.resource.data.professionalId == request.auth.uid &&
+                      isPremiumProfessional(request.auth.uid);
+      allow update: if isAuthenticated() && 
+                      (resource.data.professionalId == request.auth.uid || 
+                       isValidReviewCode(resource.data.code, resource.data.professionalId)); // Allow client to mark as used
+      allow delete: if isAdmin();
+    }
+
+    match /profile_interactions/{interactionId} {
+      allow read: if isAuthenticated() && (resource.data.professionalId == request.auth.uid || isAdmin());
+      allow create: if isValidInteraction(request.resource.data); // Allow anonymous tracking with validation
+      allow update, delete: if isAdmin();
+    }
+    
+    match /test/connection {
+      allow read, write: if true;
+    }
+
+    match /stats/{statId} {
+      allow read: if isAdmin();
+      allow write: if true; // Allow incrementing counters
+    }
+
+    match /page_views/{viewId} {
+      allow read: if isAdmin();
+      allow create: if true;
+    }
+
+    match /payments/{paymentId} {
+      allow read: if true; // Allow checking for existing payments by ID
+      allow create: if true; // Allow recording payments from server
+      allow update, delete: if isAdmin();
+    }
+
+    match /categories/{catId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
