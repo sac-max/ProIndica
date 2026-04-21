@@ -154,33 +154,6 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Categories Grid - GetNinjas Style */}
-      <section className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-black text-slate-900 mb-4">O que você está procurando?</h2>
-          <p className="text-slate-500 text-lg">Escolha uma categoria e encontre os melhores profissionais</p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {PARENT_CATEGORIES.map((parent) => {
-            const Icon = getParentIcon(parent.icon);
-            return (
-              <motion.button
-                key={parent.id}
-                whileHover={{ y: -8, scale: 1.02 }}
-                onClick={() => navigate(`/search?parentId=${parent.id}`)}
-                className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-blue-600/10 transition-all group flex flex-col items-center text-center h-full"
-              >
-                <div className="w-20 h-20 rounded-3xl bg-slate-50 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
-                  <Icon className="w-10 h-10" />
-                </div>
-                <h3 className="text-lg font-black text-slate-900">{parent.name}</h3>
-              </motion.button>
-            );
-          })}
-        </div>
-      </section>
-
       {/* Featured Professionals */}
       <section className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
@@ -193,7 +166,7 @@ export const Home: React.FC = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {featuredProfessionals.map((prof, i) => (
             <motion.div
               key={prof.id}
@@ -201,9 +174,9 @@ export const Home: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="group bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-600/10 transition-all duration-300"
+              className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:shadow-blue-600/10 transition-all duration-300 flex flex-col"
             >
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-32 overflow-hidden">
                 <img 
                   src={prof.coverURL || DEFAULT_COVER_IMAGE} 
                   alt="Cover" 
@@ -212,8 +185,8 @@ export const Home: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
                 
                 {/* Profile Photo Overlay */}
-                <div className="absolute -bottom-6 left-6">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
+                <div className="absolute -bottom-4 left-4">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-white shadow-md bg-white">
                     <img 
                       src={prof.photoURL || DEFAULT_PROFESSIONAL_IMAGE} 
                       alt={prof.name} 
@@ -227,47 +200,47 @@ export const Home: React.FC = () => {
                   {prof.isVerified && <ProfessionalBadge type="verified" size="sm" />}
                 </div>
               </div>
-              <div className="p-6 pt-10">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+              <div className="p-4 pt-8 flex-grow flex flex-col">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5 truncate">
                       {prof.name}
-                      {prof.rating >= 4.8 && <Award className="w-5 h-5 text-amber-500" />}
+                      {prof.rating >= 4.8 && <Award className="w-4 h-4 text-amber-500 flex-shrink-0" />}
                     </h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {prof.categories?.slice(0, 2).map((cat: string, catIdx: number) => (
-                        <span key={`${prof.id}-cat-${catIdx}`} className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-black rounded-md uppercase tracking-wider border border-slate-100">
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {prof.categories?.slice(0, 1).map((cat: string, catIdx: number) => (
+                        <span key={`${prof.id}-cat-${catIdx}`} className="px-1.5 py-0.5 bg-slate-50 text-slate-500 text-[9px] font-black rounded-md uppercase tracking-wider border border-slate-100 truncate max-w-[100px]">
                           {cat}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <div className="flex items-center bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 mr-1" />
-                      <span className="text-sm font-black text-amber-700">{prof.rating}</span>
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    <div className="flex items-center bg-amber-50 px-1.5 py-0.5 rounded-lg border border-amber-100">
+                      <Star className="w-3 h-3 text-amber-500 fill-amber-500 mr-0.5" />
+                      <span className="text-xs font-black text-amber-700">{prof.rating}</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-bold mt-1">12 avaliações</span>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-50">
-                  <div className="flex items-center text-slate-500 text-xs font-bold">
-                    <MapPin className="w-4 h-4 mr-1 text-blue-500" />
-                    {prof.city}, {prof.state?.substring(0, 2)}
+                <div className="flex flex-col gap-3 pt-4 border-t border-slate-50 mt-auto">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-slate-500 text-[10px] font-bold">
+                      <MapPin className="w-3.5 h-3.5 mr-1 text-blue-500" />
+                      {prof.city}, {prof.state?.substring(0, 2)}
+                    </div>
+                    <div className="flex items-center text-emerald-600 text-[9px] font-black uppercase tracking-wider">
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                      {prof.jobsCompleted || 10}+ serviços
+                    </div>
                   </div>
-                  <div className="flex items-center text-emerald-600 text-xs font-black uppercase tracking-wider">
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    {prof.jobsCompleted || 10}+ serviços
-                  </div>
+                  <button
+                    onClick={() => handleViewProfile(prof.uid)}
+                    className="w-full py-2.5 bg-slate-900 text-white text-center rounded-lg text-[10px] font-black hover:bg-blue-600 transition-all shadow-md hover:shadow-blue-600/20 uppercase tracking-widest"
+                  >
+                    Ver Perfil
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => handleViewProfile(prof.uid)}
-                  className="mt-6 block w-full py-3 bg-slate-900 text-white text-center rounded-xl font-bold hover:bg-blue-600 transition-all shadow-lg hover:shadow-blue-600/20"
-                >
-                  Ver Perfil Completo
-                </button>
               </div>
             </motion.div>
           ))}

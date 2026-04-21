@@ -158,7 +158,7 @@ export const Dashboard: React.FC = () => {
             className="bg-white text-slate-900 px-6 py-3 rounded-2xl font-black flex items-center border border-slate-200 hover:bg-slate-50 transition-all shadow-sm group"
           >
             <Eye className="w-5 h-5 mr-2 text-blue-600 group-hover:scale-110 transition-transform" />
-            Ver Minha Página
+            Minha página
           </Link>
           <div className="bg-emerald-50 text-emerald-600 px-4 py-3 rounded-2xl font-bold flex items-center border border-emerald-100 shadow-sm shadow-emerald-600/5">
             <CheckCircle className="w-5 h-5 mr-2" />

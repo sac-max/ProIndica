@@ -61,14 +61,10 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-6 ml-auto">
-            <Link to="/search" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">
-              Explorar
-            </Link>
-
-            {user && profile?.role === 'professional' && (
+            {user && (
               <Link to={`/profile/${user.uid}`} className="text-slate-600 hover:text-blue-600 font-medium transition-colors flex items-center">
                 <Eye className="w-4 h-4 mr-1.5" />
-                Ver minha página
+                Minha página
               </Link>
             )}
             
@@ -99,17 +95,22 @@ export const Navbar: React.FC = () => {
                   </Link>
                 )}
                 <Link to="/profile/edit" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">
-                  Configurações
+                  Meu perfil
                 </Link>
                 {profile?.role === 'professional' && (
                   <Link to="/dashboard" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">
-                    Dashboard
+                    Painel
                   </Link>
                 )}
-                <Link to={`/profile/${user.uid}`} className="flex items-center space-x-2 p-1 pr-3 bg-slate-50 rounded-full hover:bg-slate-100 transition-all">
+                <div className="flex items-center space-x-2 p-1 pr-3 bg-slate-50 rounded-full">
                   <img src={user.photoURL || DEFAULT_PROFESSIONAL_IMAGE} alt="" className="w-8 h-8 rounded-full border border-white shadow-sm" referrerPolicy="no-referrer" />
-                  <span className="text-sm font-semibold text-slate-700">{profile?.name?.split(' ')[0] || 'Usuário'}</span>
-                </Link>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">
+                      {profile?.role === 'professional' ? 'Profissional' : 'Cliente'}
+                    </span>
+                    <span className="text-xs font-bold text-slate-700">{profile?.name?.split(' ')[0] || 'Usuário'}</span>
+                  </div>
+                </div>
                 <button onClick={logout} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
                   <LogOut className="w-5 h-5" />
                 </button>
@@ -141,9 +142,6 @@ export const Navbar: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-slate-100 p-4 space-y-4 animate-in slide-in-from-top duration-300">
           <div className="flex flex-col space-y-2">
-            <Link to="/search" className="p-3 text-slate-600 font-medium rounded-xl hover:bg-slate-50" onClick={() => setIsMenuOpen(false)}>
-              Explorar Profissionais
-            </Link>
             {!user && (
               <button
                 onClick={() => {
@@ -159,20 +157,29 @@ export const Navbar: React.FC = () => {
             )}
             {user ? (
               <>
+                <div className="p-3 mb-2 bg-slate-50 rounded-2xl flex items-center space-x-3">
+                  <img src={user.photoURL || DEFAULT_PROFESSIONAL_IMAGE} alt="" className="w-10 h-10 rounded-full border border-white shadow-sm" referrerPolicy="no-referrer" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider leading-none mb-1">
+                      {profile?.role === 'professional' ? 'Profissional' : 'Cliente'}
+                    </span>
+                    <span className="text-sm font-bold text-slate-900">{profile?.name || 'Usuário'}</span>
+                  </div>
+                </div>
                 <Link to={`/profile/${user.uid}`} className="p-3 text-slate-600 font-medium rounded-xl hover:bg-slate-50 flex items-center" onClick={() => setIsMenuOpen(false)}>
                   <Eye className="w-4 h-4 mr-2" />
-                  Ver minha página
+                  Minha página
                 </Link>
                 <Link to="/premium" className="p-3 text-amber-600 font-bold rounded-xl hover:bg-amber-50 flex items-center" onClick={() => setIsMenuOpen(false)}>
                   <Crown className="w-4 h-4 mr-2" />
                   Seja Premium
                 </Link>
                 <Link to="/profile/edit" className="p-3 text-slate-600 font-medium rounded-xl hover:bg-slate-50" onClick={() => setIsMenuOpen(false)}>
-                  Configurações
+                  Meu perfil
                 </Link>
                 {profile?.role === 'professional' && (
                   <Link to="/dashboard" className="p-3 text-slate-600 font-medium rounded-xl hover:bg-slate-50" onClick={() => setIsMenuOpen(false)}>
-                    Dashboard
+                    Painel
                   </Link>
                 )}
                 {isAdmin && (

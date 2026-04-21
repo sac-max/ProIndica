@@ -8,7 +8,7 @@ export const HelpCenter: React.FC = () => {
       category: "Para Clientes",
       icon: User,
       questions: [
-        { q: "Como encontro um profissional?", a: "Você pode usar a barra de busca na página inicial ou ir para a página 'Explorar' e filtrar por categoria, estado e cidade." },
+        { q: "Como encontro um profissional?", a: "Você pode usar a barra de busca na página inicial ou ir para a página de busca e filtrar por categoria, estado e cidade." },
         { q: "O serviço é gratuito para clientes?", a: "Sim! O Pro Indica não cobra nenhuma taxa dos clientes para buscar e entrar em contato com profissionais." },
         { q: "Como avalio um profissional?", a: "Após realizar um serviço, vá ao perfil do profissional e use a seção de avaliações no final da página." }
       ]

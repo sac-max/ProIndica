@@ -702,7 +702,7 @@ export const Admin: React.FC = () => {
             }`}
           >
             <TrendingUp className={`w-6 h-6 mx-auto mb-1 ${activeView === 'dashboard' ? 'text-white' : 'text-blue-600'}`} />
-            <p className={`text-[10px] font-bold uppercase tracking-widest ${activeView === 'dashboard' ? 'text-blue-100' : 'text-slate-400'}`}>Dashboard</p>
+            <p className={`text-[10px] font-bold uppercase tracking-widest ${activeView === 'dashboard' ? 'text-blue-100' : 'text-slate-400'}`}>Painel</p>
           </button>
           <button 
             onClick={() => { setActiveView('users'); setSearchTerm(''); }}

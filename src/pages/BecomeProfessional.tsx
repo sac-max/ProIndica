@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, doc, setDoc, updateDoc } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import { Briefcase, CheckCircle, ArrowRight, ShieldCheck, Star, Zap, Globe, Instagram, Facebook, Linkedin, ImagePlus, Trash2, Camera, MapPin, Hash, User as UserIcon, Crown, AlertCircle } from 'lucide-react';
+import { Briefcase, CheckCircle, ArrowRight, ShieldCheck, Star, Zap, Globe, Instagram, Facebook, Linkedin, ImagePlus, Trash2, Camera, MapPin, Hash, User as UserIcon, Crown, AlertCircle, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { BRAZILIAN_STATES, DEFAULT_PROFESSIONAL_IMAGE } from '../constants';
 import { useCategories } from '../hooks/useCategories';
@@ -16,7 +16,7 @@ export const BecomeProfessional: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('free');
   const [formData, setFormData] = useState({
     profession: '',
-    specialization: '',
+    specializations: [] as string[],
     description: '',
     categories: '',
     experience: '',
@@ -33,6 +33,7 @@ export const BecomeProfessional: React.FC = () => {
     photoURL: '',
     phone: ''
   });
+  const [customSpecialization, setCustomSpecialization] = useState('');
   const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -164,7 +165,7 @@ export const BecomeProfessional: React.FC = () => {
         cep: formData.cep,
         state: formData.state,
         profession: formData.profession,
-        specialization: formData.specialization,
+        specializations: formData.specializations,
         description: formData.description,
         categories: formData.categories.split(',').map(c => c.trim()),
         experience: formData.experience,
@@ -429,7 +430,7 @@ export const BecomeProfessional: React.FC = () => {
               </p>
             </div>
           ) : (
-            <>
+            <React.Fragment>
               {paymentError && (
                 <div className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-medium flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 shrink-0" />
@@ -481,7 +482,7 @@ export const BecomeProfessional: React.FC = () => {
                     <button
                       key={cat}
                       type="button"
-                      onClick={() => setFormData({ ...formData, profession: cat, specialization: '' })}
+                      onClick={() => setFormData({ ...formData, profession: cat, specializations: [] })}
                       className={`flex-shrink-0 px-6 py-3 rounded-2xl font-bold text-sm transition-all border ${
                         formData.profession === cat
                           ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20'
@@ -494,64 +495,108 @@ export const BecomeProfessional: React.FC = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-2">Profissão</label>
-                  <select
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
-                    value={formData.profession}
-                    onChange={(e) => setFormData({ ...formData, profession: e.target.value, specialization: '' })}
-                    required
-                  >
-                    <option value="">Selecione sua profissão</option>
-                    {dynamicCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-2">Especialização</label>
-                  {formData.profession && dynamicSpecsMap[formData.profession] ? (
-                    <div className="space-y-4">
-                      <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth">
-                        {dynamicSpecsMap[formData.profession].map((spec: string) => (
-                          <button
-                            key={spec}
-                            type="button"
-                            onClick={() => setFormData({ ...formData, specialization: spec })}
-                            className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
-                              formData.specialization === spec
-                                ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                                : 'bg-white border-slate-100 text-slate-500 hover:border-blue-100 hover:bg-blue-50'
-                            }`}
-                          >
-                            {spec}
-                          </button>
-                        ))}
-                      </div>
-                      <select
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
-                        value={formData.specialization}
-                        onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                        required
-                      >
-                        <option value="">Ou selecione aqui</option>
-                        {dynamicSpecsMap[formData.profession].map((spec: string) => (
-                          <option key={spec} value={spec}>{spec}</option>
-                        ))}
-                        <option value="Outros">Outros</option>
-                      </select>
-                    </div>
-                  ) : (
-                    <input
-                      type="text"
-                      placeholder="Ex: Alta Tensão"
+              <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-2">Profissão</label>
+                    <select
                       className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
-                      value={formData.specialization}
-                      onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                      value={formData.profession}
+                      onChange={(e) => setFormData({ ...formData, profession: e.target.value, specializations: [] })}
                       required
-                    />
+                    >
+                      <option value="">Selecione sua profissão</option>
+                      {dynamicCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-2">Especialização</label>
+                  <div className="flex flex-wrap gap-2 pt-2 mb-4">
+                    {formData.specializations.map((spec) => (
+                      <div 
+                        key={spec} 
+                        className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-100 animate-in fade-in zoom-in duration-200"
+                      >
+                        {spec}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({
+                            ...formData,
+                            specializations: formData.specializations.filter(s => s !== spec)
+                          })}
+                          className="hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {formData.profession && dynamicSpecsMap[formData.profession] && (
+                    <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth mb-6">
+                      {dynamicSpecsMap[formData.profession].map((spec: string) => (
+                        <button
+                          key={spec}
+                          type="button"
+                          onClick={() => {
+                            const alreadySelected = formData.specializations.includes(spec);
+                            if (alreadySelected) {
+                              setFormData({
+                                ...formData,
+                                specializations: formData.specializations.filter(s => s !== spec)
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                specializations: [...formData.specializations, spec]
+                              });
+                            }
+                          }}
+                          className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
+                            formData.specializations.includes(spec)
+                              ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                              : 'bg-white border-slate-100 text-slate-500 hover:border-blue-100 hover:bg-blue-50'
+                          }`}
+                        >
+                          {spec}
+                        </button>
+                      ))}
+                    </div>
                   )}
+
+                  <div className="space-y-3">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Ou adicione uma nova</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Ex: Alta Tensão"
+                        className="flex-grow p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
+                        value={customSpecialization}
+                        onChange={(e) => setCustomSpecialization(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (customSpecialization.trim() && !formData.specializations.includes(customSpecialization.trim())) {
+                            setFormData({
+                              ...formData,
+                              specializations: [...formData.specializations, customSpecialization.trim()]
+                            });
+                            setCustomSpecialization('');
+                          }
+                        }}
+                        disabled={!customSpecialization.trim()}
+                        className="px-6 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-600/20 transition-all flex items-center"
+                      >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Adicionar
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -714,10 +759,10 @@ export const BecomeProfessional: React.FC = () => {
                     {processingPhotos ? (
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     ) : (
-                      <>
-                        <ImagePlus className="w-8 h-8 text-slate-400" />
-                        <span className="text-[10px] font-bold text-slate-500 mt-2 uppercase">Adicionar</span>
-                      </>
+                    <React.Fragment>
+                      <ImagePlus className="w-8 h-8 text-slate-400" />
+                      <span className="text-[10px] font-bold text-slate-500 mt-2 uppercase">Adicionar</span>
+                    </React.Fragment>
                     )}
                     <input type="file" className="sr-only" accept="image/png, image/jpeg, image/jpg, image/webp" multiple onChange={handlePhotoUpload} disabled={processingPhotos} />
                   </label>
@@ -785,10 +830,10 @@ export const BecomeProfessional: React.FC = () => {
               <ArrowRight className="ml-2 w-6 h-6" />
             </button>
           </form>
-        </>
+        </React.Fragment>
       )}
     </motion.div>
-      </div>
-    </div>
-  );
+  </div>
+</div>
+);
 };

@@ -478,11 +478,15 @@ export const Profile: React.FC = () => {
                       {cat}
                     </span>
                   ))}
-                  {professional?.specialization && (
+                  {professional?.specializations?.map((spec: string, index: number) => (
+                    <span key={`${spec}-${index}`} className="px-6 py-3 bg-indigo-50 text-indigo-600 font-bold rounded-2xl border border-indigo-100">
+                      {spec}
+                    </span>
+                  )) || (professional?.specialization && (
                     <span className="px-6 py-3 bg-indigo-50 text-indigo-600 font-bold rounded-2xl border border-indigo-100">
                       {professional.specialization}
                     </span>
-                  )}
+                  ))}
                 </div>
               </section>
 

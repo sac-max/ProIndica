@@ -215,7 +215,7 @@ export const Search: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
         <div>
           <h1 className="text-4xl font-black text-slate-900 mb-2">
-            {queryParam ? `Resultados para "${queryParam}"` : 'Explorar Profissionais'}
+            {queryParam ? `Resultados para "${queryParam}"` : 'Encontrar Profissionais'}
           </h1>
           <p className="text-slate-500 font-medium">Encontramos {professionals.length} profissionais qualificados</p>
         </div>
@@ -230,181 +230,6 @@ export const Search: React.FC = () => {
             <span className="w-5 h-5 bg-blue-600 text-white text-[10px] rounded-full flex items-center justify-center">!</span>
           )}
         </button>
-      </div>
-
-      {/* Parent Categories Grid - GetNinjas Style */}
-      <div className="mb-12 relative">
-        <h3 className="text-2xl font-black text-slate-900 mb-8 text-center md:text-left">O que você precisa hoje?</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-          <motion.button
-            whileHover={{ y: -5 }}
-            onClick={() => {
-              updateFilters({ category: 'all' }, null);
-            }}
-            className={`flex flex-col items-center justify-center p-6 rounded-[2rem] border-2 transition-all duration-300 h-full ${
-              selectedParentId === null && filters.category === 'all'
-                ? 'bg-blue-600 border-blue-600 shadow-xl shadow-blue-600/20'
-                : 'bg-white border-slate-100 hover:border-blue-200'
-            }`}
-          >
-            <div className={`w-14 h-14 rounded-2xl mb-4 flex items-center justify-center ${
-              selectedParentId === null && filters.category === 'all' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-400'
-            }`}>
-              <SearchIcon className="w-7 h-7" />
-            </div>
-            <span className={`text-xs font-black uppercase tracking-widest text-center ${
-              selectedParentId === null && filters.category === 'all' ? 'text-white' : 'text-slate-600'
-            }`}>Todos</span>
-          </motion.button>
-
-          {parentCategories.map((parent) => {
-            const Icon = getParentIcon(parent.icon);
-            const isActive = selectedParentId === parent.id;
-            return (
-              <motion.button
-                key={parent.id}
-                whileHover={{ y: -5 }}
-                onClick={() => {
-                  const isCurrentParent = selectedParentId === parent.id;
-                  const newParentId = isCurrentParent ? null : parent.id;
-                  
-                  // If switching parent, reset subcategory
-                  if (filters.category !== 'all' && categoryToParent[filters.category] !== newParentId) {
-                    updateFilters({ category: 'all' }, newParentId);
-                  } else {
-                    updateFilters({}, newParentId);
-                  }
-                }}
-                className={`flex flex-col items-center justify-center p-6 rounded-[2rem] border-2 transition-all duration-300 h-full ${
-                  isActive
-                    ? 'bg-blue-600 border-blue-600 shadow-xl shadow-blue-600/20 text-white'
-                    : 'bg-white border-slate-100 hover:border-blue-200 text-slate-600'
-                }`}
-              >
-                <div className={`w-14 h-14 rounded-2xl mb-4 flex items-center justify-center ${
-                  isActive ? 'bg-white/20' : 'bg-slate-50 text-slate-400'
-                }`}>
-                  <Icon className="w-7 h-7" />
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-widest text-center px-2 line-clamp-2">{parent.name}</span>
-              </motion.button>
-            );
-          })}
-        </div>
-
-        {/* Mega Menu / Subcategories Panel */}
-        <AnimatePresence>
-          {selectedParentId && selectedParentCategories.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, y: -20 }}
-              animate={{ opacity: 1, height: 'auto', y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -20 }}
-              className="overflow-hidden bg-white border border-slate-100 rounded-[3rem] shadow-2xl mb-12 shadow-blue-600/5"
-            >
-              <div className="p-10 md:p-14">
-                <div className="flex items-center justify-between mb-10">
-                  <div>
-                    <h4 className="text-3xl font-black text-slate-900 mb-2">
-                      {parentCategories.find(p => p.id === selectedParentId)?.name}
-                    </h4>
-                    <p className="text-slate-500 font-medium">Escolha uma especialidade para refinar sua busca</p>
-                  </div>
-                  <button 
-                    onClick={() => setSelectedParentId(null)}
-                    className="p-3 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-all"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div className="space-y-12">
-                  {selectedParentId && CATEGORY_GROUPS[selectedParentId] ? (
-                    <>
-                      {Object.entries(CATEGORY_GROUPS[selectedParentId]).map(([groupName, groupCategories]) => (
-                        <div key={groupName}>
-                          <h5 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center">
-                            <span className="w-8 h-[2px] bg-blue-600 mr-3"></span>
-                            {groupName}
-                          </h5>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-1">
-                            {groupCategories.map((cat) => (
-                              <button
-                                key={cat}
-                                onClick={() => updateFilters({ category: cat })}
-                                className={`text-left py-2 px-4 rounded-xl font-bold transition-all flex items-center justify-between group ${
-                                  filters.category === cat 
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
-                                    : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600'
-                                }`}
-                              >
-                                <span className="text-sm">{cat}</span>
-                                <ChevronDown className={`w-3 h-3 transition-transform duration-300 -rotate-90 ${
-                                  filters.category === cat ? 'text-white' : 'text-slate-200 group-hover:text-blue-300'
-                                }`} />
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {/* Show dynamic categories not in predefined groups */}
-                      {(() => {
-                        const groupDefined = Object.values(CATEGORY_GROUPS[selectedParentId]).flat();
-                        const additional = selectedParentCategories.filter(c => !groupDefined.includes(c));
-                        if (additional.length === 0) return null;
-                        return (
-                          <div>
-                            <h5 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center">
-                              <span className="w-8 h-[2px] bg-slate-200 mr-3"></span>
-                              Outros
-                            </h5>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-1">
-                              {additional.sort().map((cat) => (
-                                <button
-                                  key={cat}
-                                  onClick={() => updateFilters({ category: cat })}
-                                  className={`text-left py-2 px-4 rounded-xl font-bold transition-all flex items-center justify-between group ${
-                                    filters.category === cat 
-                                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
-                                      : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600'
-                                  }`}
-                                >
-                                  <span className="text-sm">{cat}</span>
-                                  <ChevronDown className={`w-3 h-3 transition-transform duration-300 -rotate-90 ${
-                                    filters.category === cat ? 'text-white' : 'text-slate-200 group-hover:text-blue-300'
-                                  }`} />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </>
-                  ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-2">
-                      {[...selectedParentCategories].sort().map((cat) => (
-                        <button
-                          key={cat}
-                          onClick={() => updateFilters({ category: cat })}
-                          className={`text-left py-2.5 px-4 rounded-xl font-bold transition-all flex items-center justify-between group ${
-                            filters.category === cat 
-                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
-                              : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600'
-                          }`}
-                        >
-                          <span className="text-sm">{cat}</span>
-                          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 -rotate-90 ${
-                            filters.category === cat ? 'text-white' : 'text-slate-200 group-hover:text-blue-300'
-                          }`} />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -552,13 +377,13 @@ export const Search: React.FC = () => {
         {/* Results */}
         <div>
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-slate-50 h-80 rounded-[2.5rem] animate-pulse border border-slate-100"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                <div key={i} className="bg-slate-50 h-72 rounded-[2rem] animate-pulse border border-slate-100"></div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <AnimatePresence mode="popLayout">
                 {sortedProfessionals.length > 0 ? (
                   sortedProfessionals.map((prof, i) => (
@@ -568,9 +393,9 @@ export const Search: React.FC = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
-                      className="group bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-600/10 transition-all duration-500"
+                      className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:shadow-blue-600/10 transition-all duration-500 flex flex-col"
                     >
-                      <div className="relative h-48 overflow-hidden">
+                      <div className="relative h-32 overflow-hidden">
                         <img 
                           src={prof.coverURL || DEFAULT_COVER_IMAGE} 
                           alt="" 
@@ -579,8 +404,8 @@ export const Search: React.FC = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
                         
                         {/* Profile Photo Overlay */}
-                        <div className="absolute -bottom-6 left-6">
-                          <div className="w-16 h-16 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
+                        <div className="absolute -bottom-4 left-4">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-white shadow-md bg-white">
                             <img 
                               src={prof.photoURL || DEFAULT_PROFESSIONAL_IMAGE} 
                               alt={prof.name} 
@@ -601,52 +426,47 @@ export const Search: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="p-6 pt-10">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                      <div className="p-4 pt-8 flex-grow flex flex-col">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="min-w-0">
+                            <h3 className="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5 truncate">
                               {prof.name}
-                              {prof.rating >= 4.8 && <Award className="w-5 h-5 text-amber-500" />}
+                              {prof.rating >= 4.8 && <Award className="w-4 h-4 text-amber-500 flex-shrink-0" />}
                             </h3>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {prof.categories?.slice(0, 2).map((cat: string, catIdx: number) => (
-                                <span key={`${prof.id}-cat-${catIdx}`} className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-black rounded-md uppercase tracking-wider border border-slate-100">
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {prof.categories?.slice(0, 1).map((cat: string, catIdx: number) => (
+                                <span key={`${prof.id}-cat-${catIdx}`} className="px-1.5 py-0.5 bg-slate-50 text-slate-500 text-[9px] font-black rounded-md uppercase tracking-wider border border-slate-100 truncate max-w-[100px]">
                                   {cat}
                                 </span>
                               ))}
                             </div>
                           </div>
-                          <div className="flex flex-col items-end">
-                            <div className="flex items-center bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
-                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 mr-1" />
-                              <span className="text-sm font-black text-amber-700">{prof.rating}</span>
+                          <div className="flex flex-col items-end flex-shrink-0">
+                            <div className="flex items-center bg-amber-50 px-1.5 py-0.5 rounded-lg border border-amber-100">
+                              <Star className="w-3 h-3 text-amber-500 fill-amber-500 mr-0.5" />
+                              <span className="text-xs font-black text-amber-700">{prof.rating}</span>
                             </div>
-                            <span className="text-[10px] text-slate-400 font-bold mt-1">12 indicações</span>
                           </div>
                         </div>
                         
-                        <p className="text-slate-500 text-sm line-clamp-2 mb-6 font-medium leading-relaxed">
+                        <p className="text-slate-500 text-[11px] line-clamp-2 mb-4 font-medium leading-relaxed flex-grow">
                           {prof.description || 'Profissional qualificado pronto para atender suas necessidades com qualidade e confiança.'}
                         </p>
 
-                        <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                          <div className="flex flex-col">
-                            <div className="flex items-center text-slate-400 text-xs font-bold mb-1">
-                              <MapPin className="w-3.5 h-3.5 mr-1 text-blue-500" />
+                        <div className="flex flex-col gap-3 pt-4 border-t border-slate-50 mt-auto">
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 items-center">
+                            <div className="flex items-center text-slate-400 text-[10px] font-bold">
+                              <MapPin className="w-3 h-3 mr-1 text-blue-500" />
                               {prof.city}, {prof.state?.substring(0, 2)}
                             </div>
-                            <div className="flex items-center text-emerald-600 text-[10px] font-black uppercase tracking-wider">
-                              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                            <div className="flex items-center text-emerald-600 text-[9px] font-black uppercase tracking-wider">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
                               {prof.jobsCompleted || 0}+ serviços
-                            </div>
-                            <div className="flex items-center text-amber-600 text-[10px] font-black uppercase tracking-wider mt-0.5">
-                              <Zap className="w-3.5 h-3.5 mr-1" />
-                              Responde rápido
                             </div>
                           </div>
                           <button
                             onClick={() => handleViewProfile(prof.uid || prof.id)}
-                            className="px-6 py-3 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-blue-600 transition-all shadow-lg hover:shadow-blue-600/20"
+                            className="w-full py-2.5 bg-slate-900 text-white text-[10px] font-black rounded-lg hover:bg-blue-600 transition-all shadow-md hover:shadow-blue-600/20 uppercase tracking-widest"
                           >
                             VER PERFIL
                           </button>

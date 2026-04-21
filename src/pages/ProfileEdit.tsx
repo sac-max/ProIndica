@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { db, doc, getDoc, updateDoc, updatePassword, reauthenticateWithCredential, EmailAuthProvider, query, where, getDocs, collection, auth, RecaptchaVerifier, signInWithPhoneNumber } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import { Briefcase, CheckCircle, ArrowRight, ShieldCheck, Star, Zap, Globe, Instagram, Facebook, Linkedin, ImagePlus, Trash2, Camera, MapPin, Hash, ChevronLeft, Save, Lock, Eye, EyeOff, AlertCircle, Phone, MessageSquare } from 'lucide-react';
+import { Briefcase, CheckCircle, ArrowRight, ShieldCheck, Star, Zap, Globe, Instagram, Facebook, Linkedin, ImagePlus, Trash2, Camera, MapPin, Hash, ChevronLeft, Save, Lock, Eye, EyeOff, AlertCircle, Phone, MessageSquare, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { BRAZILIAN_STATES, DEFAULT_PROFESSIONAL_IMAGE, DEFAULT_COVER_IMAGE } from '../constants';
 import { useCategories } from '../hooks/useCategories';
@@ -13,7 +13,7 @@ export const ProfileEdit: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     profession: '',
-    specialization: '',
+    specializations: [] as string[],
     description: '',
     categories: '',
     experience: '',
@@ -31,6 +31,7 @@ export const ProfileEdit: React.FC = () => {
     coverURL: '',
     phone: ''
   });
+  const [customSpecialization, setCustomSpecialization] = useState('');
   const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [processingPhotos, setProcessingPhotos] = useState(false);
@@ -71,7 +72,7 @@ export const ProfileEdit: React.FC = () => {
           setFormData({
             name: data.name || profile?.name || '',
             profession: data.profession || '',
-            specialization: data.specialization || '',
+            specializations: data.specializations || (data.specialization ? [data.specialization] : []),
             description: data.description || '',
             categories: data.categories?.join(', ') || '',
             experience: data.experience || '',
@@ -247,7 +248,7 @@ export const ProfileEdit: React.FC = () => {
         cep: formData.cep,
         state: formData.state,
         profession: formData.profession,
-        specialization: formData.specialization,
+        specializations: formData.specializations,
         description: formData.description,
         categories: formData.categories.split(',').map(c => c.trim()),
         experience: formData.experience,
@@ -662,7 +663,7 @@ export const ProfileEdit: React.FC = () => {
                   <select
                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
                     value={formData.profession}
-                    onChange={(e) => setFormData({ ...formData, profession: e.target.value, specialization: '' })}
+                    onChange={(e) => setFormData({ ...formData, profession: e.target.value, specializations: [] })}
                     required
                   >
                     <option value="">Selecione sua profissão</option>
@@ -673,47 +674,118 @@ export const ProfileEdit: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-2">Especialização</label>
-                  {formData.profession && dynamicSpecsMap[formData.profession] ? (
-                    <div className="space-y-4">
-                      <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth">
-                        {dynamicSpecsMap[formData.profession].map((spec: string) => (
-                          <button
-                            key={spec}
-                            type="button"
-                            onClick={() => setFormData({ ...formData, specialization: spec })}
-                            className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
-                              formData.specialization === spec
-                                ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                                : 'bg-white border-slate-100 text-slate-500 hover:border-blue-100 hover:bg-blue-50'
-                            }`}
+                      <div className="flex flex-wrap gap-2 pt-2 mb-4">
+                        {formData.specializations.map((spec) => (
+                          <div 
+                            key={spec} 
+                            className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-100 animate-in fade-in zoom-in duration-200"
                           >
                             {spec}
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => setFormData({
+                                ...formData,
+                                specializations: formData.specializations.filter(s => s !== spec)
+                              })}
+                              className="hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
                         ))}
                       </div>
-                      <select
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
-                        value={formData.specialization}
-                        onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                        required
-                      >
-                        <option value="">Ou selecione aqui</option>
-                        {dynamicSpecsMap[formData.profession].map((spec: string) => (
-                          <option key={spec} value={spec}>{spec}</option>
-                        ))}
-                        <option value="Outros">Outros</option>
-                      </select>
-                    </div>
-                  ) : (
-                    <input
-                      type="text"
-                      placeholder="Ex: Alta Tensão"
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
-                      value={formData.specialization}
-                      onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                      required
-                    />
-                  )}
+
+                      {formData.profession && dynamicSpecsMap[formData.profession] ? (
+                        <div className="space-y-4">
+                          <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth mb-6">
+                            {dynamicSpecsMap[formData.profession].map((spec: string) => (
+                              <button
+                                key={spec}
+                                type="button"
+                                onClick={() => {
+                                  const alreadySelected = formData.specializations.includes(spec);
+                                  if (alreadySelected) {
+                                    setFormData({
+                                      ...formData,
+                                      specializations: formData.specializations.filter(s => s !== spec)
+                                    });
+                                  } else {
+                                    setFormData({
+                                      ...formData,
+                                      specializations: [...formData.specializations, spec]
+                                    });
+                                  }
+                                }}
+                                className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
+                                  formData.specializations.includes(spec)
+                                    ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                                    : 'bg-white border-slate-100 text-slate-500 hover:border-blue-100 hover:bg-blue-50'
+                                }`}
+                              >
+                                {spec}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="space-y-3">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Ou adicione uma nova</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Ex: Alta Tensão"
+                                className="flex-grow p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
+                                value={customSpecialization}
+                                onChange={(e) => setCustomSpecialization(e.target.value)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (customSpecialization.trim() && !formData.specializations.includes(customSpecialization.trim())) {
+                                    setFormData({
+                                      ...formData,
+                                      specializations: [...formData.specializations, customSpecialization.trim()]
+                                    });
+                                    setCustomSpecialization('');
+                                  }
+                                }}
+                                disabled={!customSpecialization.trim()}
+                                className="px-6 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-600/20 transition-all flex items-center"
+                              >
+                                <Plus className="w-5 h-5 mr-2" />
+                                Adicionar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Ex: Alta Tensão"
+                              className="flex-grow p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
+                              value={customSpecialization}
+                              onChange={(e) => setCustomSpecialization(e.target.value)}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (customSpecialization.trim() && !formData.specializations.includes(customSpecialization.trim())) {
+                                  setFormData({
+                                    ...formData,
+                                    specializations: [...formData.specializations, customSpecialization.trim()]
+                                  });
+                                  setCustomSpecialization('');
+                                }
+                              }}
+                              disabled={!customSpecialization.trim()}
+                              className="px-6 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-600/20 transition-all flex items-center"
+                            >
+                              <Plus className="w-5 h-5 mr-2" />
+                              Adicionar
+                            </button>
+                          </div>
+                        </div>
+                      )}
                 </div>
               </div>
 
